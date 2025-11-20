@@ -1,0 +1,7 @@
+{
+  "type": "commonjs",
+  "dependencies": {
+    "colord": "^2.9.3",
+    "iconv-lite": "^0.7.0"
+  }
+}

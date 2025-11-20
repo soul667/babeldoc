@@ -1,0 +1,9 @@
+    {
+        "code": "wolai-bookmarks",
+        "explain": "Wolai 书签管理",
+        "cmds": [
+            "书签",
+            "bookmarks",
+            "wolai"
+        ]
+    }

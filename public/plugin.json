@@ -1,0 +1,38 @@
+{
+  "name": "洛白的工具箱",
+  "main": "index.html",
+  "preload": "preload/services.js",
+  "logo": "logo.png",
+  "development": {
+    "main": "http://localhost:5173"
+  },
+  "features": [
+    {
+      "code": "translate",
+      "explain": "使用 babeldoc 翻译 PDF",
+      "cmds": [
+        "翻译",
+        "translate",
+        "babeldoc",
+        {
+          "type": "files",
+          "fileType": "file",
+          "match": "/\\.pdf$/i",
+          "label": "Babeldoc 翻译"
+        }
+      ]
+    },
+    {
+      "code": "text-translate",
+      "explain": "AI 文本翻译",
+      "cmds": [
+        "文本翻译",
+        "text translate",
+        {
+          "type": "over",
+          "label": "翻译文本"
+        }
+      ]
+    }
+  ]
+}
