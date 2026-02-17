@@ -1,3 +1,3 @@
 [submodule "src/uitools"]
-	path = src/uitools
+	path = src/babeldoc_utools
 	url = https://github.com/soul667/babeldoc-uitools.git
