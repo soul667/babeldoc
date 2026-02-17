@@ -20,11 +20,11 @@ export default function TextTranslate({ enterAction }) {
         return false
     })
 
-    const [apiKey, setApiKey] = useState(localStorage.getItem('text_translate_apiKey') || '')
-    const [model, setModel] = useState(localStorage.getItem('text_translate_model') || 'qwen3-max')
-    const [baseUrl, setBaseUrl] = useState(localStorage.getItem('text_translate_baseUrl') || 'https://dashscope.aliyuncs.com/compatible-mode/v1')
-    const [prompt, setPrompt] = useState(localStorage.getItem('text_translate_prompt') || 'You are a professional translator.')
-    const [translateMode, setTranslateMode] = useState(localStorage.getItem('text_translate_mode') || 'show')
+    const [apiKey, setApiKey] = useState(window.utools?.dbStorage?.getItem('text_translate_apiKey') || '')
+    const [model, setModel] = useState(window.utools?.dbStorage?.getItem('text_translate_model') || 'qwen3-max')
+    const [baseUrl, setBaseUrl] = useState(window.utools?.dbStorage?.getItem('text_translate_baseUrl') || 'https://dashscope.aliyuncs.com/compatible-mode/v1')
+    const [prompt, setPrompt] = useState(window.utools?.dbStorage?.getItem('text_translate_prompt') || 'You are a professional translator.')
+    const [translateMode, setTranslateMode] = useState(window.utools?.dbStorage?.getItem('text_translate_mode') || 'show')
 
     const [sourceText, setSourceText] = useState('')
     const [translatedText, setTranslatedText] = useState('')
@@ -124,11 +124,11 @@ export default function TextTranslate({ enterAction }) {
     }
 
     const saveSettings = () => {
-        localStorage.setItem('text_translate_apiKey', apiKey)
-        localStorage.setItem('text_translate_model', model)
-        localStorage.setItem('text_translate_baseUrl', baseUrl)
-        localStorage.setItem('text_translate_prompt', prompt)
-        localStorage.setItem('text_translate_mode', translateMode)
+        window.utools.dbStorage.setItem('text_translate_apiKey', apiKey)
+        window.utools.dbStorage.setItem('text_translate_model', model)
+        window.utools.dbStorage.setItem('text_translate_baseUrl', baseUrl)
+        window.utools.dbStorage.setItem('text_translate_prompt', prompt)
+        window.utools.dbStorage.setItem('text_translate_mode', translateMode)
         setShowSettings(false)
         window.utools.showNotification('设置已保存')
     }

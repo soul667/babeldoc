@@ -66,7 +66,7 @@ window.services = {
     const iconv = require('iconv-lite')
     const path = require('node:path')
 
-    const { file, apiKey, model, baseUrl, prompt, ...otherOptions } = options
+    const { file, apiKey, model, baseUrl, prompt, debug, ...otherOptions } = options
     const outputDir = path.dirname(file)
 
     // Base arguments
@@ -79,7 +79,7 @@ window.services = {
       '-o', outputDir,
       '--custom-system-prompt', prompt,
       '--enable-json-mode-if-requested',
-
+      '--log-progress',
     ]
 
     // Add other options dynamically
@@ -117,5 +117,83 @@ window.services = {
     })
 
     return child.pid
+  },
+
+  // 读取配置
+  readSettings() {
+    const fs = require('node:fs')
+    const path = require('node:path')
+    const yaml = require('js-yaml')
+    const configPath = path.join(window.utools.getPath('userData'), 'config.yaml')
+    
+    try {
+      if (fs.existsSync(configPath)) {
+        const fileContents = fs.readFileSync(configPath, 'utf8')
+        return yaml.load(fileContents) || {}
+      }
+    } catch (e) {
+      console.error('Failed to read settings:', e)
+    }
+    return {}
+  },
+
+  // 保存配置
+  saveSettings(settings) {
+    const fs = require('node:fs')
+    const path = require('node:path')
+    const yaml = require('js-yaml')
+    const configPath = path.join(window.utools.getPath('userData'), 'config.yaml')
+    
+    try {
+      fs.writeFileSync(configPath, yaml.dump(settings), 'utf8')
+      return true
+    } catch (e) {
+      console.error('Failed to save settings:', e)
+      return false
+    }
+  },
+
+  // 导出配置
+  exportSettings(settings) {
+    const fs = require('node:fs')
+    const yaml = require('js-yaml')
+    const path = window.utools.showSaveDialog({
+      title: 'Export Configuration',
+      defaultPath: 'babeldoc-config.yaml',
+      filters: [{ name: 'YAML', extensions: ['yaml', 'yml'] }]
+    })
+
+    if (path) {
+      try {
+        fs.writeFileSync(path, yaml.dump(settings), 'utf8')
+        return true
+      } catch (e) {
+        console.error('Failed to export settings:', e)
+        return false
+      }
+    }
+    return false
+  },
+
+  // 导入配置
+  importSettings() {
+    const fs = require('node:fs')
+    const yaml = require('js-yaml')
+    const paths = window.utools.showOpenDialog({
+      title: 'Import Configuration',
+      filters: [{ name: 'YAML', extensions: ['yaml', 'yml'] }],
+      properties: ['openFile']
+    })
+
+    if (paths && paths.length > 0) {
+      try {
+        const fileContents = fs.readFileSync(paths[0], 'utf8')
+        return yaml.load(fileContents)
+      } catch (e) {
+        console.error('Failed to import settings:', e)
+        return null
+      }
+    }
+    return null
   }
 }

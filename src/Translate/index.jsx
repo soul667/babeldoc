@@ -56,30 +56,28 @@ export default function Translate({ enterAction }) {
     })
 
     // File list state - each file has: { id, path, name, status, progress, statusMessage }
+    // File list state - each file has: { id, path, name, status, progress, statusMessage }
     const [files, setFiles] = useState([])
-    const [apiKey, setApiKey] = useState(localStorage.getItem('babeldoc_apiKey') || '')
-    const [model, setModel] = useState(localStorage.getItem('babeldoc_model') || 'gpt-4o')
-    const [baseUrl, setBaseUrl] = useState(localStorage.getItem('babeldoc_baseUrl') || 'https://api.openai.com/v1')
-    const [prompt, setPrompt] = useState(localStorage.getItem('babeldoc_prompt') || 'Translate this PDF to Chinese.')
+    const [apiKey, setApiKey] = useState('')
+    const [model, setModel] = useState('gpt-4o')
+    const [baseUrl, setBaseUrl] = useState('https://api.openai.com/v1')
+    const [prompt, setPrompt] = useState('Translate this PDF to Chinese.')
 
     // Advanced Settings State
-    const [advancedSettings, setAdvancedSettings] = useState(() => {
-        const saved = localStorage.getItem('babeldoc_advanced')
-        return saved ? JSON.parse(saved) : {
-            // General
-            qps: 10,
-            watermarkOutputMode: 'watermarked',
-            debug: false,
-            showCharBox: false,
-            // PDF Processing
-            pages: '',
-            splitShortLines: false,
-            ocrWorkaround: false,
-            enhanceCompatibility: false,
-            // Translation
-            glossaryFiles: '',
-            minTextLength: 5
-        }
+    const [advancedSettings, setAdvancedSettings] = useState({
+        // General
+        qps: 10,
+        watermarkOutputMode: 'watermarked',
+        debug: false,
+        showCharBox: false,
+        // PDF Processing
+        pages: '',
+        splitShortLines: false,
+        ocrWorkaround: false,
+        enhanceCompatibility: false,
+        // Translation
+        glossaryFiles: '',
+        minTextLength: 5
     })
 
     const [logs, setLogs] = useState([])
@@ -88,6 +86,26 @@ export default function Translate({ enterAction }) {
     const [currentFileIndex, setCurrentFileIndex] = useState(-1)
     const logEndRef = useRef(null)
     const fileInputRef = useRef(null)
+
+    // Load Settings on Mount
+    useEffect(() => {
+        if (window.services && window.services.readSettings) {
+            const settings = window.services.readSettings()
+            if (settings) {
+                if (settings.apiKey) setApiKey(settings.apiKey)
+                if (settings.model) setModel(settings.model)
+                if (settings.baseUrl) setBaseUrl(settings.baseUrl)
+                if (settings.prompt) setPrompt(settings.prompt)
+                if (settings.advancedSettings) {
+                    setAdvancedSettings(prev => ({ ...prev, ...settings.advancedSettings }))
+                }
+            }
+        } else {
+             // Fallback to legacy dbStorage just in case, or for migration? 
+             // Ideally we just start fresh or manual migration.
+             // For now, let's keep it clean and only read from new file.
+        }
+    }, [])
 
     // Listen for theme changes
     useEffect(() => {
@@ -162,14 +180,49 @@ export default function Translate({ enterAction }) {
     }
 
     const saveSettings = () => {
-        localStorage.setItem('babeldoc_apiKey', apiKey)
-        localStorage.setItem('babeldoc_model', model)
-        localStorage.setItem('babeldoc_baseUrl', baseUrl)
-        localStorage.setItem('babeldoc_prompt', prompt)
-        localStorage.setItem('babeldoc_advanced', JSON.stringify(advancedSettings))
+        const settings = {
+            apiKey,
+            model,
+            baseUrl,
+            prompt,
+            advancedSettings
+        }
+        
+        if (window.services && window.services.saveSettings) {
+            window.services.saveSettings(settings)
+            setShowSettings(false)
+            window.utools.showNotification('设置已保存')
+        }
+    }
+    
+    const handleExportSettings = () => {
+        const settings = {
+            apiKey,
+            model,
+            baseUrl,
+            prompt,
+            advancedSettings
+        }
+        if (window.services && window.services.exportSettings) {
+             const success = window.services.exportSettings(settings)
+             if (success) window.utools.showNotification('配置导出成功')
+        }
+    }
 
-        setShowSettings(false)
-        window.utools.showNotification('设置已保存')
+    const handleImportSettings = () => {
+        if (window.services && window.services.importSettings) {
+            const settings = window.services.importSettings()
+            if (settings) {
+                if (settings.apiKey) setApiKey(settings.apiKey)
+                if (settings.model) setModel(settings.model)
+                if (settings.baseUrl) setBaseUrl(settings.baseUrl)
+                if (settings.prompt) setPrompt(settings.prompt)
+                if (settings.advancedSettings) {
+                    setAdvancedSettings(prev => ({ ...prev, ...settings.advancedSettings }))
+                }
+                window.utools.showNotification('配置导入成功')
+            }
+        }
     }
 
     const handleAdvancedChange = (key, value) => {
@@ -836,25 +889,37 @@ export default function Translate({ enterAction }) {
                 <DialogActions sx={{
                     p: 2,
                     borderTop: `1px solid ${theme.border.primary}`,
-                    bgcolor: isDarkMode ? theme.bg.secondary : '#fbfbfd'
+                    bgcolor: isDarkMode ? theme.bg.secondary : '#fbfbfd',
+                    justifyContent: 'space-between'
                 }}>
-                    <Button onClick={() => setShowSettings(false)} sx={{ color: theme.text.secondary }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={saveSettings}
-                        variant="contained"
-                        sx={{
-                            borderRadius: '8px',
-                            px: 3,
-                            fontWeight: '600',
-                            boxShadow: 'none',
-                            bgcolor: theme.accent.blue,
-                            '&:hover': { bgcolor: theme.accent.blueHover }
-                        }}
-                    >
-                        Save Changes
-                    </Button>
+                    <Box>
+                        <Button onClick={handleImportSettings} sx={{ color: theme.text.secondary }}>
+                            Import
+                        </Button>
+                        <Button onClick={handleExportSettings} sx={{ color: theme.text.secondary }}>
+                            Export
+                        </Button>
+                    </Box>
+                    <Box>
+                        <Button onClick={() => setShowSettings(false)} sx={{ color: theme.text.secondary }}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={saveSettings}
+                            variant="contained"
+                            sx={{
+                                ml: 1,
+                                borderRadius: '8px',
+                                px: 3,
+                                fontWeight: '600',
+                                boxShadow: 'none',
+                                bgcolor: theme.accent.blue,
+                                '&:hover': { bgcolor: theme.accent.blueHover }
+                            }}
+                        >
+                            Save Changes
+                        </Button>
+                    </Box>
                 </DialogActions>
             </Dialog>
         </Container>
